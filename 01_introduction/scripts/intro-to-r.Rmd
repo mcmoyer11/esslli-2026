@@ -1,0 +1,89 @@
+---
+title: "Introduction to R for Data Science"
+output: html_document
+---
+
+# Introduction
+
+R is a programming language designed for statistics, data analysis, and visualization.
+
+## Installing Packages
+
+```{r}
+# install.packages("tidyverse")
+```
+
+## Loading Packages
+
+```{r}
+library(tidyverse)
+```
+
+## Set working directory
+This code sets the directory to the current one.
+```{r}
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+```
+
+
+# Basic Objects
+
+```{r}
+x <- c(1,2,3,4,5)
+mean(x)
+summary(x)
+```
+
+# Data Frames
+
+```{r}
+df <- tibble(
+  name = c("Alice","Bob","Carol"),
+  score = c(90,85,95)
+)
+
+df
+```
+
+## Save a data frame to a .csv
+```{r}
+write.csv(df,"../data/data.csv")
+```
+
+
+## Importing Data
+
+```{r}
+data <- read_csv("../data/data.csv")
+head(data)
+```
+
+# Data Wrangling
+
+```{r}
+data %>%
+  filter(score > 80) %>%
+  arrange(desc(score))
+```
+
+# Visualization
+
+```{r}
+ggplot(df, aes(name, score)) +
+  geom_col()
+```
+
+# Simple Statistics
+
+```{r}
+lm(score ~ 1, data = df)
+```
+
+# Exercises
+
+1. Create a vector of 10 numbers.
+2. Import a CSV file.
+3. Filter rows using `filter()`.
+4. Make a scatterplot with `ggplot2`.
+5. Fit a linear model with `lm()`.
