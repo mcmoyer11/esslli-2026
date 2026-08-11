@@ -1,6 +1,6 @@
 ---
-title: "Introduction to Corpus Analysis with Warriner et al. Norms"
-author: "Introduction to R for Data Science"
+title: "Corpus Analysis with Warriner et al. Norms"
+author: "morgan moyer"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -19,14 +19,8 @@ In this tutorial we will learn how to:
 - Import a corpus
 - Tokenize text into words
 - Calculate word frequencies
-- Merge lexical norms with corpus data
-- Examine the emotional properties of a corpus using the
-  Warriner et al. (2013) norms of **Valence**, **Arousal**, and **Dominance**
-- Visualize emotional characteristics of texts
-
-By the end of this tutorial you should understand how corpus linguists can
-quantify emotional content automatically.
-
+- Examine the  Warriner et al. (2013) norms of **Valence**, **Arousal**, and **Dominance**
+- Visualize
 ---
 
 # What are lexical norms?
@@ -64,86 +58,33 @@ Examples:
 library(tidyverse)
 library(tidytext)
 
+# Set working directory to the current directory
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
 ```
 
 ---
 
-# Loading a corpus
+# Loading the corpora
 
 For this example we'll use a simple text file.
 
 ```{r}
 
-corpus <- readLines("example_corpus.txt")
+war <- read.csv("../data/warriner.csv")
+brys <- read.csv("../data/brysbaert.csv")
+subtlex <- read.csv("../data/SUBTLEX-US.csv")
 
-head(corpus)
-
-```
-
-Suppose each line is one sentence.
-
----
-
-# Tokenizing the corpus
-
-Tokenization splits text into individual words.
-
-```{r}
-
-tokens <-
-
-  tibble(text = corpus) %>%
-
-  unnest_tokens(word, text)
-
-head(tokens)
+head(war)
 
 ```
 
-Notice that:
-
-- punctuation disappears
-- words become lowercase
-- each row contains one word
-
----
-
-# Counting word frequencies
-
-```{r}
-
-word_counts <-
-
-tokens %>%
-
-count(word, sort = TRUE)
-
-head(word_counts)
-
-```
-
-We now know the most common words in the corpus.
-
----
-
-# Loading the Warriner norms
-
-Download the Warriner et al. ratings from the authors' website and save the
-CSV file in your project folder.
-
-```{r}
-
-warriner <- read_csv("Ratings_Warriner_et_al.csv")
-
-glimpse(warriner)
-
-```
 
 The important columns are:
 
 ```{r}
 
-names(warriner)
+names(war)
 
 ```
 
@@ -162,9 +103,9 @@ Rename the columns to something easier to use.
 
 ```{r}
 
-warriner <-
+war<-
 
-warriner %>%
+war%>%
 
 transmute(
 
@@ -178,7 +119,7 @@ dominance = D.Mean.Sum
 
 )
 
-head(warriner)
+head(war)
 
 ```
 
@@ -194,7 +135,7 @@ tokens_va <-
 
 tokens %>%
 
-left_join(warriner,
+left_join(war,
           by = "word")
 
 head(tokens_va)
@@ -378,7 +319,7 @@ documents %>%
 
 unnest_tokens(word, text) %>%
 
-left_join(warriner,
+left_join(war,
           by = "word")
 
 ```
