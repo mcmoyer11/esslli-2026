@@ -57,6 +57,8 @@ Examples:
 
 library(tidyverse)
 library(tidytext)
+library(ggplot2)
+
 
 # Set working directory to the current directory
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
@@ -76,6 +78,7 @@ brys <- read.csv("../data/brysbaert.csv")
 subtlex <- read.csv("../data/SUBTLEX-US.csv")
 
 head(war)
+head(subtlex)
 
 ```
 
@@ -85,10 +88,11 @@ The important columns are:
 ```{r}
 
 names(war)
+names(brys)
+names(subtlex)
 
 ```
 
-Typically the variables include
 
 - Word
 - V.Mean.Sum
@@ -103,25 +107,58 @@ Rename the columns to something easier to use.
 
 ```{r}
 
-war<-
-
-war%>%
-
-transmute(
-
-word = Word,
-
-valence = V.Mean.Sum,
-
-arousal = A.Mean.Sum,
-
-dominance = D.Mean.Sum
-
-)
+war <- war %>%
+      transmute(
+        Word = Word,
+        valence = V.Mean.Sum,
+        arousal = A.Mean.Sum,
+        dominance = D.Mean.Sum,
+        valence.sd = V.SD.Sum,
+        arousal.sd = A.SD.Sum,
+        dominance.sd = D.SD.Sum
+      
+      )
 
 head(war)
 
 ```
+
+# take a look at valence and arousal as a 
+
+```{r}
+ggplot(war, aes(x = arousal, y = valence)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  labs(
+    x = "Arousal (A.Mean.Sum)",
+    y = "Valence (V.Mean.Sum)",
+    title = "Valence as a Function of Arousal"
+  )
+```
+
+## calculate correlation
+```{r}
+cor(war$arousal, war$valence, use = "complete.obs")
+```
+
+
+# Add word labels
+```{r}
+
+head(war)
+ggplot(war, aes(x = arousal, y = valence, label = Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  theme_minimal() +
+  labs(
+    x = "Arousal (A.Mean.Sum)",
+    y = "Valence (V.Mean.Sum)",
+    title = "Valence as a Function of Arousal"
+  )
+```
+
+
 
 ---
 
@@ -131,11 +168,8 @@ Now we merge the emotional ratings onto each token.
 
 ```{r}
 
-tokens_va <-
-
-tokens %>%
-
-left_join(war,
+total <- war |> 
+  left_join(., brys
           by = "word")
 
 head(tokens_va)
