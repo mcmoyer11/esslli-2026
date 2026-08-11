@@ -9,47 +9,16 @@ output:
     theme: cosmo
 ---
 
-# Introduction
 
-One of the strengths of computational linguistics is the ability to combine
-large text corpora with lexical databases.
 
-In this tutorial we will learn how to:
+1.  Affect Norms:
+>[Warriner, Kuperman & Brysbaert (2013)](https://link.springer.com/article/10.3758/s13428-012-0314-x)
 
-- Import a corpus
-- Tokenize text into words
-- Calculate word frequencies
-- Examine the  Warriner et al. (2013) norms of **Valence**, **Arousal**, and **Dominance**
-- Visualize
----
+2. Concreteness Norms:
+> [Brysbaert, Warriner, Kuperman (2014)](https://link.springer.com/article/10.3758/s13428-013-0403-5)
 
-# What are lexical norms?
-
-Lexical norms are databases in which human participants have rated words
-along different psychological dimensions.
-
-One of the most widely used datasets is:
-
-> Warriner, Kuperman & Brysbaert (2013)
-
-Participants rated nearly 14,000 English words on three scales.
-
-| Dimension | Meaning |
-|------------|----------|
-| **Valence** | How pleasant or unpleasant a word is |
-| **Arousal** | How exciting or calming a word is |
-| **Dominance** | How much control or power is associated with a word |
-
-Examples:
-
-| Word | Valence | Arousal | Dominance |
-|------|---------|----------|------------|
-| love | High | Medium | Medium |
-| death | Low | High | Low |
-| puppy | High | Medium | Low |
-| dictator | Low | High | High |
-
----
+3. Word Frequency corpus:
+> [Subtlex Corpus](https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus)
 
 # Packages
 
@@ -65,11 +34,8 @@ this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 ```
 
----
 
-# Loading the corpora
-
-For this example we'll use a simple text file.
+# Loading the corporas
 
 ```{r}
 
@@ -92,15 +58,6 @@ names(subtlex)
 
 ```
 
-
-- Word
-- V.Mean.Sum
-- A.Mean.Sum
-- D.Mean.Sum
-
-
-
-# Preparing the norms
 
 Rename the columns to something easier to use.
 
