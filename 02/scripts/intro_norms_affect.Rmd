@@ -59,7 +59,7 @@ names(subtlex)
 ```
 
 
-Rename the columns to something easier to use.
+Optional: Rename the columns to something easier to use.
 
 ```{r}
 
@@ -159,20 +159,20 @@ ggplot(war, aes(x = arousal, y = valence, label = Word)) +
 
 # Frequency
 ```{r}
-# subset data just to make it more managable
+names(subtlex)
+# subset dataframe to relevant columns just to make it more managable
 subtlex <- subtlex[,c("Word","SUBTLWF")]
 head(subtlex)
 ```
 
 
-# Joining norms together
+# Joining datasets together
 
-Merge the datasets by Word
 ```{r}
 
-total <- war |>  
+total <- war %>%  
   left_join(brys,
-          by = "Word") |> 
+          by = "Word") %>% 
   left_join(subtlex, by="Word")
 
 head(total)
@@ -202,7 +202,7 @@ nrow(total)
 
 ## Drop all words that don't have ratings for both concreteness and affect
 ```{r}
-total <- total |> 
+total <- total %>% 
   filter(!is.na(Conc.M))
 nrow(total)
 ```
@@ -247,24 +247,22 @@ total %>%
 ```{r}
 
 total %>%
-  arrange(desc(valence)) |> 
+  arrange(desc(valence)) %>% 
   head()
 
 ```
 
----
 
 # Most negative words
 
 ```{r}
 
 total %>%
-  arrange(desc(valence)) |> 
+  arrange(desc(valence)) %>% 
   tail()
 
 ```
 
----
 
 # Relationship between Valence and Arousal
 
@@ -282,6 +280,68 @@ Questions:
 
 - Are positive words highly arousing?
 - Are negative words highly arousing?
+
+
+
+```{r}
+range(total$valence)
+
+# create a variable for the most positive words
+most_pos <- total %>%
+  filter(valence > 6)
+
+# create a variable for the most negative words
+most_neg <- total %>%
+  filter(valence < 3)
+
+  
+```
+
+```{r}
+ggplot(most_pos, aes(x = arousal, y = valence, label = Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Arousal",
+    y = "Valence",
+    title = "Valence as a Function of Arousal in Most Positive words"
+  )
+```
+
+```{r}
+ggplot(most_pos, aes(x = Conc.M, y = valence, label = Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Concreteness",
+    y = "Valence",
+    title = "Valence as a Function of Concreteness in Most Positive words"
+  )
+```
+---
+
+
+```{r}
+ggplot(most_neg, aes(x = arousal, y = valence, label = Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Arousal",
+    y = "Valence",
+    title = "Valence as a Function of Arousal in Most Negative words"
+  )
+```
+
+```{r}
+ggplot(most_neg, aes(x = Conc.M, y = valence, label = Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    x = "Concreteness",
+    y = "Valence",
+    title = "Valence as a Function of Concreteness in Most Negative words"
+  )
+```
 
 
 
