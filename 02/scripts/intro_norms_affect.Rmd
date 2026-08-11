@@ -79,7 +79,6 @@ subtlex <- read.csv("../data/SUBTLEX-US.csv")
 
 head(war)
 head(subtlex)
-
 ```
 
 
@@ -99,7 +98,7 @@ names(subtlex)
 - A.Mean.Sum
 - D.Mean.Sum
 
----
+
 
 # Preparing the norms
 
@@ -123,13 +122,56 @@ head(war)
 
 ```
 
+
+# Distribution of valence
+
+```{r}
+
+ggplot(war,
+       aes(valence)) +
+
+geom_histogram(bins = 30)
+
+```
+
+Questions:
+
+- Is the corpus generally positive?
+- Are there many emotionally neutral words?
+
+---
+
+# Distribution of arousal
+
+```{r}
+
+ggplot(war,
+       aes(arousal)) +
+
+geom_histogram(bins = 30)
+
+```
+
+---
+
+# Distribution of dominance
+
+```{r}
+
+ggplot(war,
+       aes(dominance)) +
+
+geom_histogram(bins = 30)
+
+```
+
+
 # take a look at valence and arousal as a 
 
 ```{r}
 ggplot(war, aes(x = arousal, y = valence)) +
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
   labs(
     x = "Arousal (A.Mean.Sum)",
     y = "Valence (V.Mean.Sum)",
@@ -150,7 +192,6 @@ head(war)
 ggplot(war, aes(x = arousal, y = valence, label = Word)) +
   geom_text(alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE) +
-  theme_minimal() +
   labs(
     x = "Arousal (A.Mean.Sum)",
     y = "Valence (V.Mean.Sum)",
@@ -159,20 +200,25 @@ ggplot(war, aes(x = arousal, y = valence, label = Word)) +
 ```
 
 
+# Frequency
+```{r}
+# subset data just to make it more managable
+subtlex <- subtlex[,c("Word","SUBTLWF")]
+head(subtlex)
+```
 
----
 
-# Joining lexical norms to the corpus
+# Joining norms together
 
-Now we merge the emotional ratings onto each token.
-
+Merge the datasets by Word
 ```{r}
 
-total <- war |> 
-  left_join(., brys
-          by = "word")
+total <- war |>  
+  left_join(brys,
+          by = "Word") |> 
+  left_join(subtlex, by="Word")
 
-head(tokens_va)
+head(total)
 
 ```
 
@@ -188,13 +234,21 @@ How many words have ratings?
 
 ```{r}
 
-mean(!is.na(tokens_va$valence))
+sum(!is.na(total$Conc.M))
 
+sum(is.na(total$Conc.M))
+
+length(unique(total$Word))
+
+nrow(total)
 ```
 
-This gives the proportion of corpus words covered by the norms.
-
----
+## Drop all words that don't have ratings for both concreteness and affect
+```{r}
+total <- total |> 
+  filter(!is.na(Conc.M))
+nrow(total)
+```
 
 # Average emotional properties
 
@@ -202,78 +256,31 @@ Now calculate the average emotional profile of the corpus.
 
 ```{r}
 
-tokens_va %>%
+agr <- total %>%
+      summarise(
+          Mean_Valence = mean(valence, na.rm = TRUE),
+          Mean_Arousal = mean(arousal, na.rm = TRUE),
+          Mean_Dominance = mean(dominance, na.rm = TRUE),
+          Mean_Conc = mean(Conc.M, na.rm = TRUE)
+      )
 
-summarise(
-
-Mean_Valence = mean(valence, na.rm = TRUE),
-
-Mean_Arousal = mean(arousal, na.rm = TRUE),
-
-Mean_Dominance = mean(dominance, na.rm = TRUE)
-
-)
-
+print(agr)
 ```
-
----
-
-# Distribution of valence
-
-```{r}
-
-ggplot(tokens_va,
-       aes(valence)) +
-
-geom_histogram(bins = 30)
-
-```
-
-Questions:
-
-- Is the corpus generally positive?
-- Are there many emotionally neutral words?
-
----
-
-# Distribution of arousal
-
-```{r}
-
-ggplot(tokens_va,
-       aes(arousal)) +
-
-geom_histogram(bins = 30)
-
-```
-
----
-
-# Distribution of dominance
-
-```{r}
-
-ggplot(tokens_va,
-       aes(dominance)) +
-
-geom_histogram(bins = 30)
-
-```
-
----
 
 # Which emotional words are most frequent?
 
 ```{r}
+names(total)
+total %>%
+  arrange(desc(SUBTLWF)) %>%
+  head()
 
-tokens_va %>%
+```
 
-filter(!is.na(valence)) %>%
-
-count(word,
-      valence,
-      sort = TRUE)
-
+```{r}
+total %>%
+  arrange(desc(SUBTLWF)) %>%
+  tail()
 ```
 
 ---
@@ -282,11 +289,9 @@ count(word,
 
 ```{r}
 
-tokens_va %>%
-
-distinct(word, valence) %>%
-
-arrange(desc(valence))
+total %>%
+  arrange(desc(valence)) |> 
+  head()
 
 ```
 
@@ -296,11 +301,9 @@ arrange(desc(valence))
 
 ```{r}
 
-tokens_va %>%
-
-distinct(word, valence) %>%
-
-arrange(valence)
+total %>%
+  arrange(desc(valence)) |> 
+  tail()
 
 ```
 
@@ -310,7 +313,7 @@ arrange(valence)
 
 ```{r}
 
-ggplot(tokens_va,
+ggplot(total,
        aes(valence,
            arousal)) +
 
@@ -323,112 +326,65 @@ Questions:
 - Are positive words highly arousing?
 - Are negative words highly arousing?
 
----
 
-# Looking at individual texts
 
-Suppose each row of the corpus is a document.
+# Concreteness
 
 ```{r}
-
-documents <-
-
-tibble(
-
-doc = 1:length(corpus),
-
-text = corpus
-
-)
-
-```
-
-Tokenize while keeping the document ID.
-
-```{r}
-
-doc_tokens <-
-
-documents %>%
-
-unnest_tokens(word, text) %>%
-
-left_join(war,
-          by = "word")
-
-```
-
-Now compute emotional averages for each document.
-
-```{r}
-
-document_scores <-
-
-doc_tokens %>%
-
-group_by(doc) %>%
-
-summarise(
-
-valence = mean(valence, na.rm = TRUE),
-
-arousal = mean(arousal, na.rm = TRUE),
-
-dominance = mean(dominance, na.rm = TRUE)
-
-)
-
-document_scores
-
-```
-
----
-
-# Visualizing documents
-
-```{r}
-
-ggplot(document_scores,
+ggplot(total,
        aes(valence,
-           arousal)) +
+           Conc.M)) +
 
-geom_point(size = 3)
+geom_point(alpha = .3)
 
 ```
 
-Each point represents one document.
+```{r}
+ggplot(total, aes(x = Conc.M, y = valence)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  # theme_minimal() +
+  labs(
+    x = "Concreteness",
+    y = "Valence (V.Mean.Sum)",
+    title = "Valence as a Function of Concreteness"
+  )
+```
 
----
+# Frequency and Valence?
 
-# Discussion
+```{r}
+ggplot(total, aes(x = SUBTLWF, y = valence, label=Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  # theme_minimal() +
+  labs(
+    x = "Frequency",
+    y = "Valence",
+    title = "Valence as a Function of Frequency"
+  )
+```
 
-Lexical norms allow us to estimate the emotional characteristics of texts
-without asking participants to rate every document.
 
-This approach is widely used in:
+# Frequency and Arousal?
 
-- sentiment analysis
-- computational linguistics
-- digital humanities
-- psychology
-- communication science
-
-However, remember that lexical norms have limitations.
-
-For example:
-
-- Words can have different meanings in different contexts.
-- Negation ("not happy") changes emotional meaning.
-- Irony and sarcasm are difficult to detect.
-- Emotional meaning is not simply the average of individual words.
-
----
+```{r}
+ggplot(total, aes(x = SUBTLWF, y = arousal, label=Word)) +
+  geom_text(alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE) +
+  # theme_minimal() +
+  labs(
+    x = "Frequency",
+    y = "Arousal",
+    title = "Arousal as a Function of Frequency"
+  )
+```
 
 # Exercises
 
 ### Exercise 1
 
-Calculate the average valence of your own corpus.
+Calculate the average variance in valence.
 
 ---
 
@@ -440,7 +396,7 @@ Which ten words contribute most to the emotional profile?
 
 ### Exercise 3
 
-Compare two texts.
+Compare two words
 
 Which is:
 
@@ -457,17 +413,3 @@ Create a scatterplot of valence versus dominance.
 What relationship do you observe?
 
 ---
-
-# Summary
-
-In this tutorial you learned how to:
-
-- tokenize text
-- count word frequencies
-- merge lexical norms with corpus data
-- compute emotional summaries
-- visualize emotional properties of texts
-- compare documents using lexical ratings
-
-These techniques form the basis of many modern approaches to sentiment
-analysis and computational psycholinguistics.
