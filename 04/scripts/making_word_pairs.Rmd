@@ -1,0 +1,97 @@
+---
+title: "Making all pairwise wordpairs"
+author: "morgan moyer"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: cosmo
+---
+
+# Packages
+
+```{r message=FALSE}
+
+library(tidyverse)
+library(tidytext)
+library(ggplot2)
+
+
+# Set working directory to the current directory
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+```
+
+
+# Loading the word list
+
+```{r}
+
+df <- read.csv("../data/word_list.csv")
+
+```
+
+# Jon the data frames together
+
+```{r}
+# Get all unique pairs of words
+pairs <- combn(seq_len(nrow(df)), 2, simplify = FALSE)
+
+pair_df <- lapply(pairs, function(i) {
+  
+  w1 <- df[i[1], ]
+  w2 <- df[i[2], ]
+  
+  # Determine feature matching
+  val_match  <- w1$Valence == w2$Valence
+  conc_match <- w1$Concreteness == w2$Concreteness
+  
+  # FeatureMatch classification
+  feature_match <- case_when(
+    val_match & conc_match  ~ "MaxMatch",
+    val_match & !conc_match ~ "ValenceMatch",
+    !val_match & conc_match ~ "ConcreteMatch",
+    !val_match & !conc_match ~ "MaxMismatch"
+  )
+  
+  tibble(
+    Features = paste(
+      paste(w1$Valence, w1$Concreteness, sep = "-"),
+      paste(w2$Valence, w2$Concreteness, sep = "-"),
+      sep = "-"
+    ),
+    
+    WordPairs = paste(
+      w1$Word,
+      w2$Word,
+      sep = "-"
+    ),
+    
+    FeatureMatch = feature_match
+  )
+}) %>%
+  bind_rows()
+```
+
+# Split on FeatureMatch and save each to .csv for PCIbex
+```{r}
+
+pair_df %>%
+  filter(FeatureMatch == "ValenceMatch") %>%
+  write.csv("../data/ValenceMatch.csv", row.names = FALSE)
+
+pair_df %>%
+  filter(FeatureMatch == "ConcreteMatch") %>%
+  write.csv("../data/ConcreteMatch.csv", row.names = FALSE)
+
+pair_df %>%
+  filter(FeatureMatch == "MaxMatch") %>%
+  write.csv("../data/MaxMatch.csv", row.names = FALSE)
+
+pair_df %>%
+  filter(FeatureMatch == "MaxMismatch") %>%
+  write.csv("../data/MaxMismatch.csv", row.names = FALSE)
+```
+
+

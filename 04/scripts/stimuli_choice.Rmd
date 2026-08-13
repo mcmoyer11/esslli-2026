@@ -1,0 +1,173 @@
+---
+title: "Making stimuli from Affective and Concreteness Norms"
+author: "morgan moyer"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: cosmo
+---
+
+
+
+1.  Affect Norms:
+>[Warriner, Kuperman & Brysbaert (2013)](https://link.springer.com/article/10.3758/s13428-012-0314-x)
+
+2. Concreteness Norms:
+> [Brysbaert, Warriner, Kuperman (2014)](https://link.springer.com/article/10.3758/s13428-013-0403-5)
+
+3. Word Frequency corpus:
+> [Subtlex Corpus](https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus)
+
+# Packages
+
+```{r message=FALSE}
+
+library(tidyverse)
+library(tidytext)
+library(ggplot2)
+
+
+# Set working directory to the current directory
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+```
+
+
+# Loading the corporas
+
+```{r}
+
+war <- read.csv("../../02/data/warriner.csv")
+brys <- read.csv("../../02/data/brysbaert.csv")
+subtlex <- read.csv("../../02/data/SUBTLEX-US.csv")
+
+```
+
+# Jon the data frames together
+
+```{r}
+
+total <- war %>%  
+  left_join(brys,
+          by = "Word") %>% 
+  left_join(subtlex, by="Word") %>%
+  drop_na() %>%
+  select(Word,V.Mean.Sum,V.SD.Sum,Conc.M,Conc.SD,SUBTLWF)
+  
+
+names(total)
+
+```
+
+# filter out the words based on positive/negative ratings
+
+Idelly you want to come up with a principled way to determine the upper/lower cutoff points. One possibility includes, minimizing the difference between the rating and the scale endpoint. Another criterion would be to choose based on the upper and lower quartiles. (see the output of Summary() )
+
+Discussion of pros/cons of: re-naming the df
+
+## first with valence. Remember what the scales range is: 
+```{r}
+range(total$V.Mean.Sum)
+summary(total$V.Mean.Sum)
+```
+
+
+```{r}
+val.filtered <- total %>%
+  filter(
+    # Use conditional logic to make filtering conditions. The line in between is
+    # logical 'or'
+    (V.Mean.Sum > 6) |
+      (V.Mean.Sum < 4)
+    )
+
+  
+```
+
+## Next:  Concreteness
+
+you can do it all at once with multiple filter conditions, or step-by-step. Note that below we are filtering from the previous df, val.filtered, and not the 'total' df.
+
+```{r}
+range(total$Conc.M)
+summary(total$Conc.M)
+```
+
+
+```{r}
+conc.filtered <- val.filtered %>%
+  filter(
+    # Use conditional logic to make filtering conditions. The line in between is
+    # logical 'or'
+    (Conc.M > 4) |
+      (V.Mean.Sum < 2) )
+
+```
+
+```{r}
+length(unique(conc.filtered$Word))
+```
+
+
+# now reduce the variance and choose the most extremem examples from each feature combination
+
+
+```{r}
+selected <- conc.filtered %>%
+  filter(
+    !is.na(V.Mean.Sum),
+    !is.na(Conc.M),
+    !is.na(V.SD.Sum),
+    !is.na(Conc.SD)
+  ) %>%
+  mutate(
+    Valence = case_when(
+      V.Mean.Sum < 3 ~ "Negative",
+      V.Mean.Sum > 6 ~ "Positive",
+      TRUE ~ NA_character_
+    ),
+    Concreteness = case_when(
+      Conc.M < 2 ~ "Abstract",
+      Conc.M > 4 ~ "Concrete",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(Valence), !is.na(Concreteness)) %>%
+  group_by(Valence, Concreteness) %>%
+  mutate(
+    # Higher is better for means
+    V_rank = percent_rank(V.Mean.Sum),
+    Conc_rank = percent_rank(Conc.M),
+    
+    # Lower is better for SDs
+    V_SD_rank = 1 - percent_rank(V.SD.Sum),
+    Conc_SD_rank = 1 - percent_rank(Conc.SD)
+  ) %>%
+  mutate(
+    
+    # Reverse valence ranking for Negative words
+    V_rank = if_else(
+      Valence == "Negative",
+      1 - V_rank,
+      V_rank
+    ),
+    
+    # Overall stimulus-quality score
+    quality = V_rank + Conc_rank + V_SD_rank + Conc_SD_rank
+  ) %>%
+  arrange(desc(quality), .by_group = TRUE) %>%
+  slice_head(n = 10) %>%
+  ungroup()
+```
+
+```{r}
+write.csv(selected,"../data/word_list.csv")
+```
+
+
+
+
+
+
