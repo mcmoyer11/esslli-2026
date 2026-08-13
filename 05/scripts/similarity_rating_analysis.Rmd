@@ -1,0 +1,137 @@
+---
+title: "Analyzing a Similarity Rating Study"
+author: "Your Name"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+# load packages
+library(tidyverse)
+library(lme4)
+library(lmerTest)   # for p-values
+library(broom.mixed)
+
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+```
+
+# Intro
+
+a Similarity Rating study with a 4 × 1 design, where participants rate the similarity of word pairs.
+Our primary goal is to predict similarity Rating from a predictor FeatureMatch using a linear mixed-effects regression model.
+
+# Overview of statistical analysis
+
+Statistical analysis often follows a common workflow:
+
+    - Inspect the data (variables, distributions, missingness)
+
+    - Visualize key relationships
+
+    - Fit a statistical model that matches the design
+
+    - Check model assumptions
+
+    - Interpret coefficients and report results
+    
+    
+# read in data
+
+```{r}
+# Replace with your actual data path or object
+# Example: a CSV file with columns: Subject, WordPair, Rating, FeatureMatch, Condition
+
+sim_data <- read_csv("data/similarity_ratings.csv")
+
+# glimpse the structure
+glimpse(sim_data)
+```
+
+```{r}
+sim_data <- sim_data %>%
+  mutate(
+    # Ensure Rating is numeric
+    Rating = as.numeric(Rating),
+    # Make FeatureMatch a factor or numeric predictor as appropriate
+    FeatureMatch = as.factor(FeatureMatch),
+    WordPair = as.factor(WordPair),
+    Subject = as.factor(Subject)    # if available
+  )
+
+summary(sim_data)
+```
+
+
+# Visualization
+
+## histogram
+```{r}
+
+```
+
+
+## barplot
+```{r}
+sim_data %>%
+  ggplot(aes(x = FeatureMatch, y = Rating)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(
+    title = "Similarity ratings by FeatureMatch level",
+    x = "FeatureMatch",
+    y = "Rating"
+  )
+```
+
+
+
+```{r}
+sim_data %>%
+  group_by(WordPair, FeatureMatch) %>%
+  summarize(
+    mean_rating = mean(Rating, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = FeatureMatch, y = mean_rating)) +
+  geom_point(alpha = 0.6) +
+  facet_wrap(~ WordPair) +
+  theme_minimal() +
+  labs(
+    title = "Mean similarity ratings by FeatureMatch and WordPair",
+    x = "FeatureMatch",
+    y = "Mean rating"
+  )
+```
+
+
+# Model specification
+```{r}
+mod_wordpair <- lmer(
+  Rating ~ FeatureMatch + (1 | WordPair),
+  data = sim_data
+)
+
+summary(mod_wordpair)
+```
+## Report table
+
+```{r}
+report_table <- tidy_mod %>%
+  select(term, estimate, std.error, conf.low, conf.high, p.value)
+
+report_table
+```
+
+
+

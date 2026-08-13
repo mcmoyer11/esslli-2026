@@ -1,0 +1,26 @@
+---
+title: "Analyzing a Binary Judgment Study"
+author: "Your Name"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+# load packages
+library(tidyverse)
+library(lme4)
+library(lmerTest)   # for p-values
+library(broom.mixed)
+
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+```
