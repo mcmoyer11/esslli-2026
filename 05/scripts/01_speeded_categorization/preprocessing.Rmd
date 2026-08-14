@@ -18,7 +18,7 @@ theme_set(theme_bw())
 cbPalette <- c("#56B4E9", "#D55E00", "#009E73","#999999", "#E69F00")
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
-source("../helpers.R")
+source("../../helpers.R")
 ```
 
 # Introduction
@@ -58,29 +58,29 @@ read.pcibex <- function(filepath, auto.colnames=TRUE, fun.col=function(col,cols)
 }
 
 # Read in the results
-vc.a <- read.pcibex("../../data/sc_results_prod_VC_A.csv")
+vc.a <- read.pcibex("../../data/01_speeded_categorization/sc_results_prod_VC_A.csv")
 vc.a["BlockOrder"] <- "VC"
 vc.a["Group"] <- "A"
 length(unique(vc.a$MD5.hash.of.participant.s.IP.address))
 
-vc.b <- read.pcibex("../../data/sc_results_prod_VC_B.csv")
+vc.b <- read.pcibex("../../data/01_speeded_categorization/sc_results_prod_VC_B.csv")
 vc.b["BlockOrder"] <- "VC"
 vc.b["Group"] <- "B"
 length(unique(vc.b$MD5.hash.of.participant.s.IP.address))
 
-cv.a <- read.pcibex("../../data/sc_results_prod_CV_A.csv")
+cv.a <- read.pcibex("../../data/01_speeded_categorization/sc_results_prod_CV_A.csv")
 cv.a["BlockOrder"] <- "CV"
 cv.a["Group"] <- "A"
 length(unique(cv.a$MD5.hash.of.participant.s.IP.address))
 
-cv.b <- read.pcibex("../../data/sc_results_prod_CV_B.csv")
+cv.b <- read.pcibex("../../data/01_speeded_categorization/sc_results_prod_CV_B.csv")
 cv.b["BlockOrder"] <- "CV"
 cv.b["Group"] <- "B"
 length(unique(cv.b$MD5.hash.of.participant.s.IP.address))
 
 
 # Read-in the file with the word feature values of interest
-facts <- read.csv("../../data/sc_word_list.csv")
+facts <- read.csv("../../data/01_speeded_categorization/sc_word_list.csv")
 names(facts)
 # Create a new column that has the combination of feature values in case we want to look at that later
 # facts["ConcValCombo"] <- paste(facts$Concreteness,facts$Valence,sep="-")
@@ -139,7 +139,7 @@ d$LogReactionTime <- log(d$ReactionTime)
 
 
 # Write to .csv
-write.csv(d,"../../data/sc_processed.csv")
+write.csv(d,"../../data/01_speeded_categorization/sc_processed.csv")
 
 ```
 

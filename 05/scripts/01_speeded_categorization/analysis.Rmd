@@ -19,9 +19,9 @@ theme_set(theme_bw())
 cbPalette <- c("#56B4E9", "#D55E00", "#009E73","#999999", "#E69F00")
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
-source("../helpers.R")
+source("../../helpers.R")
 
-d <- read.csv("../../data/rt_processed.csv")
+d <- read.csv("../../data/01_speeded_categorization/rt_processed.csv")
 ```
 
 
