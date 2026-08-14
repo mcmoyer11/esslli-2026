@@ -1,0 +1,110 @@
+---
+title: "Similarity Judgment Task: Graphs"
+author: "author"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE, warning=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(lme4)
+library(lmerTest)
+library(multcomp) # not available for this version of R
+library(stringr)
+library(textstem)
+library(sciplot)
+library(tidyverse)
+theme_set(theme_bw())
+cbPalette <- c("#56B4E9", "#D55E00", "#009E73","#999999", "#E69F00")
+this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(this.dir)
+source("../helpers.R")
+
+d <- read.csv("../../data/sj_processed.csv")
+d$FeatureMatch <- as.factor(d$FeatureMatch)
+d$FeatureMatch <- recode(d$FeatureMatch, ConceptualMatchingOnly = 'TruthCondMatchingOnly')
+
+```
+
+
+## Summary Stats
+```{r}
+agr <- d %>% 
+  group_by(FeatureMatch) %>% 
+  summarize(MeanSimilarity = mean(Response),
+            SD = sd(Response))
+print(agr)
+```
+
+```{r}
+agr <- d %>% 
+  filter(!FeatureMatch == "SelfPair")
+
+ggplot(agr, aes(Response,fill=FeatureMatch)) +
+  geom_density(alpha = .5)
+  # facet_wrap(~FeatureMatch)
+
+ggplot(agr, aes(Response,fill=FeatureMatch)) +
+  geom_density(alpha = .5) +
+  facet_wrap(~FeatureMatch)
+```
+
+```{r}
+agr <- d %>% 
+  group_by(FeatureMatch) %>% 
+  reframe(MeanSimilarity = mean(Response), 
+          CILow = ci.low(Response), 
+          CIHigh = ci.high(Response)) %>%
+  mutate(YMin = MeanSimilarity - CILow, 
+         YMax = MeanSimilarity + CIHigh)
+# View(agr)
+
+dodge = position_dodge(.9)
+ggplot(data=agr, aes(x=reorder(FeatureMatch,MeanSimilarity),y=MeanSimilarity, fill=FeatureMatch)) +
+  geom_bar(position=dodge,stat="identity") + 
+  geom_errorbar(aes(ymin=YMin,ymax=YMax),width=.25,position=position_dodge(0.9)) +
+  theme(axis.text.x = element_text(angle = 10, hjust = 1))
+
+
+```
+
+```{r}
+agr <- d %>% 
+  group_by(WordPair,FeatureMatch) %>% 
+  reframe(MeanSimilarity = mean(Response), 
+          CILow = ci.low(Response), 
+          CIHigh = ci.high(Response)) %>%
+  mutate(YMin = MeanSimilarity - CILow, 
+         YMax = MeanSimilarity + CIHigh)
+# Set dodge width to match violin grouping
+dodge_width <- 0.9
+
+ggplot(agr, aes(x = reorder(FeatureMatch,MeanSimilarity), y = MeanSimilarity, fill = FeatureMatch)) + 
+  geom_violin(trim = FALSE, alpha = 0.4, position = position_dodge(width = dodge_width)) +
+
+  # Add mean point with matching dodge
+  stat_summary(fun = mean,
+               geom = "point",
+               shape = 23,
+               size = 3,
+               position = position_dodge(width = dodge_width)) +
+  
+  stat_summary(fun = median,
+                geom = "crossbar",
+                width = 0.3, 
+                linewidth = 0.2,
+                position = position_dodge(width = dodge_width)) +
+  
+  labs(y = "MeanSimilarity", x = "Experiment") +
+  theme(text = element_text(family = "Helvetica")) +
+  # theme(axis.text.x = element_text(angle = 10, hjust = 1))
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal"
+    # axis.text.x = element_text(angle = 10, hjust = .5, margin = margin(t = 10)),
+    # plot.margin = margin(10, 20, 20, 10)  # top, right, bottom, left (in pts)
+
+  ) 
+```

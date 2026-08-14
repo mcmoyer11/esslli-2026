@@ -24,3 +24,30 @@ library(broom.mixed)
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
 ```
+
+# Introduction and study details
+
+```{r}
+
+```
+
+# exclusions
+```{r}
+
+```
+
+
+# Graphs
+
+```{r}
+
+```
+
+
+
+# Model
+
+```{r}
+
+```
+
