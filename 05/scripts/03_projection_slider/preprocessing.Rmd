@@ -63,7 +63,8 @@ val <- read.csv("../../data/03_projection_slider/valence-vals.csv")
 
 ```{r}
 # Assign participant number
-d$Participant <- as.integer(factor(d$MD5.hash.of.participant.s.IP.address))
+d <- d %>%
+  mutate(Participant = match(MD5.hash.of.participant.s.IP.address, unique(MD5.hash.of.participant.s.IP.address)))
 length(unique(d$Participant))
 
 # Separate out demographic information

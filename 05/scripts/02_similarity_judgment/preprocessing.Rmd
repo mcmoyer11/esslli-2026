@@ -18,7 +18,7 @@ theme_set(theme_bw())
 cbPalette <- c("#56B4E9", "#D55E00", "#009E73","#999999", "#E69F00")
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
-source("../../helpers.R")
+source("../helpers.R")
 ```
 
 
@@ -73,7 +73,7 @@ d <- d %>%
          (PennElementType %in% c("Scale"))) %>% 
    rename(Response = Value)
 
-# View(d)
+View(d)
 d["WordPair"] <- paste(d$Word1,d$Word2,sep="-")
 d <- d[,c("ID.Ibex","Label","Response","FeatureMatch","Word1","Word2","WordPair","Conceptual","Valence")]
 

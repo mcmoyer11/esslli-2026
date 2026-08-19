@@ -18,7 +18,7 @@ theme_set(theme_bw())
 cbPalette <- c("#56B4E9", "#D55E00", "#009E73","#999999", "#E69F00")
 this.dir <- dirname(rstudioapi::getSourceEditorContext()$path)
 setwd(this.dir)
-source("../../helpers.R")
+source("../helpers.R")
 ```
 
 # Introduction
@@ -90,7 +90,7 @@ names(facts)[names(facts) == "Words"] <- "Word"
 # Combine all the dfs together
 d <- rbind(vc.a, cv.a, vc.b, cv.b)
 
-d <- d %>% 
+d <- d %>%
   left_join(facts, by="Word")
 
 names(d)
@@ -104,7 +104,10 @@ length(unique(d$MD5.hash.of.participant.s.IP.address))
 View(d)
 # get the IDs in the right way
 
-d["ID.true"] = d["MD5.hash.of.participant.s.IP.address"]
+# d["ID.true"] = d["MD5.hash.of.participant.s.IP.address"]
+
+d <- d %>%
+  mutate(ID.true = match(MD5.hash.of.participant.s.IP.address, unique(MD5.hash.of.participant.s.IP.address)))
 
 
 # Add a Response column# Add a Response column
